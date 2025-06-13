@@ -1,4 +1,4 @@
-package ru.itegor.antiplagiacode.model;
+package ru.itegor.antiplagiacode.user;
 
 import jakarta.persistence.*;
 import lombok.Getter;
