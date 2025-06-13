@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
+import ru.itegor.antiplagiacode.clazz.ClassEntity;
 
 import java.time.LocalDate;
 import java.util.Objects;
