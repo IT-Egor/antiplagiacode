@@ -1,19 +1,13 @@
 package ru.itegor.antiplagiacode.student;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * DTO for {@link StudentClassEntity}
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class StudentResponseDto {
-    private Long id;
-    private Long studentId;
-    private Long classId;
+    Long id;
+    Long studentId;
+    Long classId;
 }

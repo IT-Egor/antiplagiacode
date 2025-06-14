@@ -8,17 +8,14 @@ import ru.itegor.antiplagiacode.user.UserEntity;
 /**
  * DTO for {@link ru.itegor.antiplagiacode.user.UserEntity}
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class MergeUserRequestDto {
     @NotBlank(message = "Username is required")
-    private String username;
+    String username;
 
     @NotBlank(message = "Password is required")
-    private String password;
+    String password;
 
-    @NotNull
-    private UserEntity.Role role;
+    @NotNull(message = "Role is required")
+    UserEntity.Role role;
 }

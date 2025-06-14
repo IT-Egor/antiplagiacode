@@ -1,20 +1,14 @@
 package ru.itegor.antiplagiacode.user.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.itegor.antiplagiacode.user.UserEntity;
 
 /**
  * DTO for {@link ru.itegor.antiplagiacode.user.UserEntity}
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class UserResponseDto {
-    private Long id;
-    private String username;
-    private UserEntity.Role role;
+    Long id;
+    String username;
+    UserEntity.Role role;
 }

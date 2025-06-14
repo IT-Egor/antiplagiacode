@@ -5,11 +5,8 @@ import lombok.*;
 /**
  * DTO for {@link ru.itegor.antiplagiacode.clazz.ClassEntity}
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class ClassResponseDto {
-    private Long id;
-    private String name;
+    Long id;
+    String name;
 }

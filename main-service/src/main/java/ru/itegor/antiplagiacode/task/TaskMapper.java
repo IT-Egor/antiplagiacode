@@ -10,12 +10,6 @@ public interface TaskMapper {
     TaskEntity toEntity(MergeTaskRequestDto mergeTaskRequestDto);
 
     @Mapping(source = "clazz.id", target = "classId")
-    MergeTaskRequestDto toMergeTaskRequestDto(TaskEntity taskEntity);
-
-    @Mapping(source = "classId", target = "clazz.id")
-    TaskEntity toEntity(TaskResponseDto taskResponseDto);
-
-    @Mapping(source = "clazz.id", target = "classId")
     TaskResponseDto toTaskResponseDto(TaskEntity taskEntity);
 
     @InheritConfiguration(name = "toEntity")

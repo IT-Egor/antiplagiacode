@@ -6,11 +6,8 @@ import lombok.*;
 /**
  * DTO for {@link ru.itegor.antiplagiacode.clazz.ClassEntity}
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class MergeClassRequestDto {
-    @NotBlank
-    private String name;
+    @NotBlank(message = "Class name is required")
+    String name;
 }
