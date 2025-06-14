@@ -48,7 +48,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto create(MergeUserRequestDto dto) {
         UserEntity userEntity = userMapper.toEntity(dto);
-        dto.getRole();
         UserEntity resultUserEntity = userRepository.save(userEntity);
         return userMapper.toUserResponseDto(resultUserEntity);
     }

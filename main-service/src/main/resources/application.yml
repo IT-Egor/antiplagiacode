@@ -21,7 +21,7 @@ spring:
     password: antiplagiacode
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
       jdbc:
         time_zone: UTC
     properties:

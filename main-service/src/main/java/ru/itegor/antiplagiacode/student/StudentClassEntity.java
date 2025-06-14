@@ -1,4 +1,4 @@
-package ru.itegor.antiplagiacode.model;
+package ru.itegor.antiplagiacode.student;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,7 +25,7 @@ public class StudentClassEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", nullable = false)
-    private ClassEntity classEntity;
+    private ClassEntity clazz;
 
     @Override
     public final boolean equals(Object o) {
