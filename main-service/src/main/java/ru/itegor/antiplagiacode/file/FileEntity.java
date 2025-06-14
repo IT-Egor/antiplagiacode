@@ -15,12 +15,18 @@ import java.util.Objects;
 @Setter
 @Entity
 @ToString
-@Table(name = "files")
+@Table(name = "files",
+        uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_user_id_task_id",
+                columnNames = {"task_id", "user_id"}
+        )
+})
 public class FileEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @Column(name = "storage_id", nullable = false, unique = true)
     private String storageId;

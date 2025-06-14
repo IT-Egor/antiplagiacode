@@ -21,4 +21,6 @@ public interface StudentRepository extends JpaRepository<StudentClassEntity, Lon
             @Param("studentIds") Collection<Long> studentIds,
             @Param("clazzId") Long clazzId
     );
+
+    boolean existsByStudent_IdAndClazz_Id(Long studentId, Long classId);
 }
