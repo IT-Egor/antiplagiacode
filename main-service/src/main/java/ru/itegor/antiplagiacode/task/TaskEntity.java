@@ -1,4 +1,4 @@
-package ru.itegor.antiplagiacode.model;
+package ru.itegor.antiplagiacode.task;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,7 +19,7 @@ public class TaskEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -33,7 +33,7 @@ public class TaskEntity {
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id", nullable = false)
-    private ClassEntity classEntity;
+    private ClassEntity clazz;
 
     @Override
     public final boolean equals(Object o) {
