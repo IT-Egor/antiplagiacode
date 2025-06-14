@@ -1,19 +1,17 @@
 package ru.itegor.antiplagiacode.clazz.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import ru.itegor.antiplagiacode.clazz.ClassEntity;
 import ru.itegor.antiplagiacode.clazz.ClassMapper;
 import ru.itegor.antiplagiacode.clazz.ClassRepository;
 import ru.itegor.antiplagiacode.clazz.dto.ClassResponseDto;
 import ru.itegor.antiplagiacode.clazz.dto.MergeClassRequestDto;
 import ru.itegor.antiplagiacode.clazz.service.ClassService;
+import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -24,45 +22,48 @@ public class ClassServiceImpl implements ClassService {
 
     @Override
     public List<ClassResponseDto> getAll() {
-        List<ClassEntity> classEntities = classRepository.findAll();
-        return classEntities.stream()
+        List<ClassEntity> classes = classRepository.findAll();
+        return classes.stream()
                 .map(classMapper::toClassResponseDto)
                 .toList();
     }
 
     @Override
     public ClassResponseDto getOne(Long id) {
-        Optional<ClassEntity> classEntityOptional = classRepository.findById(id);
-        return classMapper.toClassResponseDto(classEntityOptional.orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(id))));
+        return classMapper.toClassResponseDto(findById(id));
     }
 
     @Override
     public List<ClassResponseDto> getMany(List<Long> ids) {
-        List<ClassEntity> classEntities = classRepository.findAllById(ids);
-        return classEntities.stream()
+        List<ClassEntity> classes = classRepository.findAllById(ids);
+        return classes.stream()
                 .map(classMapper::toClassResponseDto)
                 .toList();
     }
 
     @Override
     public ClassResponseDto create(MergeClassRequestDto dto) {
-        ClassEntity classEntity = classMapper.toEntity(dto);
-        ClassEntity resultClassEntity = classRepository.save(classEntity);
-        return classMapper.toClassResponseDto(resultClassEntity);
+        ClassEntity clazz = classMapper.toEntity(dto);
+        ClassEntity resultClass = classRepository.save(clazz);
+        return classMapper.toClassResponseDto(resultClass);
     }
 
     @Override
     public ClassResponseDto delete(Long id) {
-        ClassEntity classEntity = classRepository.findById(id).orElse(null);
-        if (classEntity != null) {
-            classRepository.delete(classEntity);
+        ClassEntity clazz = classRepository.findById(id).orElse(null);
+        if (clazz != null) {
+            classRepository.delete(clazz);
         }
-        return classMapper.toClassResponseDto(classEntity);
+        return classMapper.toClassResponseDto(clazz);
     }
 
     @Override
     public void deleteMany(List<Long> ids) {
         classRepository.deleteAllById(ids);
+    }
+
+    private ClassEntity findById(Long id) {
+        return classRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("Class with id `%s` not found".formatted(id)));
     }
 }

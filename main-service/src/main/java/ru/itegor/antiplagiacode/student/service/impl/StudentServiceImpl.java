@@ -3,12 +3,12 @@ package ru.itegor.antiplagiacode.student.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import ru.itegor.antiplagiacode.clazz.ClassEntity;
 import ru.itegor.antiplagiacode.clazz.ClassRepository;
+import ru.itegor.antiplagiacode.exception.exceptions.AccessLevelException;
+import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.student.StudentClassEntity;
 import ru.itegor.antiplagiacode.student.StudentMapper;
 import ru.itegor.antiplagiacode.student.StudentRepository;
@@ -30,25 +30,25 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public Page<StudentResponseDto> getAll(Pageable pageable) {
-        Page<StudentClassEntity> studentClassEntities = studentRepository.findAll(pageable);
-        return studentClassEntities.map(studentMapper::toStudentResponseDto);
+        Page<StudentClassEntity> studentClasses = studentRepository.findAll(pageable);
+        return studentClasses.map(studentMapper::toStudentResponseDto);
     }
 
     @Override
     public StudentResponseDto getOneById(Long id) {
-        StudentClassEntity studentClassEntityOptional = findById(id);
-        return studentMapper.toStudentResponseDto(studentClassEntityOptional);
+        return studentMapper.toStudentResponseDto(findById(id));
     }
 
     @Override
     public StudentResponseDto getOneByStudentIdAndClassId(Long studentId, Long classId) {
-        StudentClassEntity studentClassEntityOptional = findByStudentIdAndClassId(studentId, classId);
-        return studentMapper.toStudentResponseDto(studentClassEntityOptional);
+        return studentMapper.toStudentResponseDto(findByStudentIdAndClassId(studentId, classId));
     }
 
     @Override
     public List<Long> getStudentsByClassId(Long classId) {
-        return studentRepository.findByClazz_Id(classId).stream().map(StudentClassEntity::getId).toList();
+        return studentRepository.findByClazz_Id(classId).stream()
+                .map(StudentClassEntity::getId)
+                .toList();
     }
 
     @Override
@@ -85,11 +85,11 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentResponseDto delete(Long id) {
-        StudentClassEntity studentClassEntity = studentRepository.findById(id).orElse(null);
-        if (studentClassEntity != null) {
-            studentRepository.delete(studentClassEntity);
+        StudentClassEntity studentClass = studentRepository.findById(id).orElse(null);
+        if (studentClass != null) {
+            studentRepository.delete(studentClass);
         }
-        return studentMapper.toStudentResponseDto(studentClassEntity);
+        return studentMapper.toStudentResponseDto(studentClass);
     }
 
     @Override
@@ -99,33 +99,32 @@ public class StudentServiceImpl implements StudentService {
 
     private StudentClassEntity findByStudentIdAndClassId(Long studentId, Long classId) {
         return studentRepository.findByStudent_IdAndClazz_Id(studentId, classId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Entity with student id `%s` and class id `%s` not found".formatted(studentId, classId)));
+                new NotFoundException("User with id `%s` not found in class with id `%s`".formatted(studentId, classId)));
     }
 
     private StudentClassEntity findById(Long id) {
         return studentRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(id)));
+                new NotFoundException("Student class entity with id `%s` not found".formatted(id)));
     }
 
     private StudentClassEntity findByStudentId(Long studentId) {
         return studentRepository.findByStudent_Id(studentId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(studentId)));
+                new NotFoundException("Student class entity with student id `%s` not found".formatted(studentId)));
     }
 
     private UserEntity findStudentById(Long studentId) {
         return userRepository.findById(studentId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(studentId)));
+                new NotFoundException("Student with id `%s` not found".formatted(studentId)));
     }
 
     private ClassEntity findClassById(Long classId) {
         return classRepository.findById(classId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(classId)));
+                new NotFoundException("Class with id `%s` not found".formatted(classId)));
     }
 
     private void checkUserRole(UserEntity user) {
         if (user.getRole() != UserEntity.Role.STUDENT) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with id `%s` is not a student".formatted(user.getId()));
+            throw new AccessLevelException("User with id `%s` is not a student".formatted(user.getId()));
         }
     }
 }

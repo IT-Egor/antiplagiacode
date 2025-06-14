@@ -3,12 +3,11 @@ package ru.itegor.antiplagiacode.task.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import ru.itegor.antiplagiacode.clazz.ClassEntity;
 import ru.itegor.antiplagiacode.clazz.ClassRepository;
+import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.task.TaskEntity;
 import ru.itegor.antiplagiacode.task.TaskMapper;
 import ru.itegor.antiplagiacode.task.TaskRepository;
@@ -29,14 +28,13 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Page<TaskResponseDto> getAll(Pageable pageable) {
-        Page<TaskEntity> taskEntities = taskRepository.findAll(pageable);
-        return taskEntities.map(taskMapper::toTaskResponseDto);
+        Page<TaskEntity> tasks = taskRepository.findAll(pageable);
+        return tasks.map(taskMapper::toTaskResponseDto);
     }
 
     @Override
     public TaskResponseDto getOne(Long id) {
-        TaskEntity taskEntityOptional = findById(id);
-        return taskMapper.toTaskResponseDto(taskEntityOptional);
+        return taskMapper.toTaskResponseDto(findById(id));
     }
 
     @Override
@@ -73,32 +71,32 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponseDto create(MergeTaskRequestDto dto) {
-        TaskEntity taskEntity = taskMapper.toEntity(dto);
+        TaskEntity task = taskMapper.toEntity(dto);
         findClassById(dto.getClassId());
-        TaskEntity resultTaskEntity = taskRepository.save(taskEntity);
-        return taskMapper.toTaskResponseDto(resultTaskEntity);
+        TaskEntity resultTask = taskRepository.save(task);
+        return taskMapper.toTaskResponseDto(resultTask);
     }
 
     @Override
     public TaskResponseDto patch(Long id, MergeTaskRequestDto dto) {
-        TaskEntity taskEntity = findById(id);
+        TaskEntity task = findById(id);
         if (dto.getClassId() != null) {
             findClassById(dto.getClassId());
         }
 
-        taskMapper.updateWithNull(dto, taskEntity);
+        taskMapper.updateWithNull(dto, task);
 
-        TaskEntity resultTaskEntity = taskRepository.save(taskEntity);
-        return taskMapper.toTaskResponseDto(resultTaskEntity);
+        TaskEntity resultTask = taskRepository.save(task);
+        return taskMapper.toTaskResponseDto(resultTask);
     }
 
     @Override
     public TaskResponseDto delete(Long id) {
-        TaskEntity taskEntity = taskRepository.findById(id).orElse(null);
-        if (taskEntity != null) {
-            taskRepository.delete(taskEntity);
+        TaskEntity task = taskRepository.findById(id).orElse(null);
+        if (task != null) {
+            taskRepository.delete(task);
         }
-        return taskMapper.toTaskResponseDto(taskEntity);
+        return taskMapper.toTaskResponseDto(task);
     }
 
     @Override
@@ -108,11 +106,11 @@ public class TaskServiceImpl implements TaskService {
 
     private TaskEntity findById(Long id) {
         return taskRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with id `%s` not found".formatted(id)));
+                new NotFoundException("Task with id `%s` not found".formatted(id)));
     }
 
     private ClassEntity findClassById(Long id) {
         return classRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Class with id `%s` not found".formatted(id)));
+                new NotFoundException("Class with id `%s` not found".formatted(id)));
     }
 }

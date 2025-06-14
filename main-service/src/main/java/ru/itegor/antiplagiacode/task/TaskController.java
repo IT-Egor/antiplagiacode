@@ -6,6 +6,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.itegor.antiplagiacode.task.dto.MergeTaskRequestDto;
 import ru.itegor.antiplagiacode.task.dto.TaskResponseDto;
@@ -20,57 +21,68 @@ public class TaskController {
     private final TaskService taskService;
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public PagedModel<TaskResponseDto> getAll(@ParameterObject Pageable pageable) {
         Page<TaskResponseDto> taskResponseDtos = taskService.getAll(pageable);
         return new PagedModel<>(taskResponseDtos);
     }
 
     @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public TaskResponseDto getOne(@PathVariable Long id) {
         return taskService.getOne(id);
     }
 
     @GetMapping("/by-class-id")
+    @ResponseStatus(HttpStatus.OK)
     public List<TaskResponseDto> getTasksForClass(@RequestParam Long classId) {
         return taskService.getTasksForClass(classId);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/by-class-id/relevant")
     public List<TaskResponseDto> getRelevantTasksForClass(@RequestParam Long classId) {
         return taskService.getRelevantTasksForClass(classId);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/by-student-id/relevant")
     public List<TaskResponseDto> getRelevantTasksForStudent(@RequestParam Long studentId) {
         return taskService.getRelevantTasksForStudent(studentId);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/by-class-id/irrelevant")
     public List<TaskResponseDto> getIrrelevantTasksForClass(@RequestParam Long classId) {
         return taskService.getIrrelevantTasksForClass(classId);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/by-student-id/irrelevant")
     public List<TaskResponseDto> getIrrelevantTasksForStudent(@RequestParam Long studentId) {
         return taskService.getIrrelevantTasksForStudent(studentId);
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public TaskResponseDto create(@RequestBody @Valid MergeTaskRequestDto dto) {
         return taskService.create(dto);
     }
 
     @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public TaskResponseDto patch(@PathVariable Long id, @RequestBody @Valid MergeTaskRequestDto dto) {
         return taskService.patch(id, dto);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public TaskResponseDto delete(@PathVariable Long id) {
         return taskService.delete(id);
     }
 
     @DeleteMapping
+    @ResponseStatus(HttpStatus.OK)
     public int deleteForClass(@RequestParam Long classId) {
         return taskService.deleteForClass(classId);
     }

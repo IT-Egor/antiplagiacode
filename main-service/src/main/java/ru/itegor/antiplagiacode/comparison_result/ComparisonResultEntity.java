@@ -1,48 +1,45 @@
-package ru.itegor.antiplagiacode.model;
+package ru.itegor.antiplagiacode.comparison_result;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
-import ru.itegor.antiplagiacode.task.TaskEntity;
-import ru.itegor.antiplagiacode.user.UserEntity;
+import ru.itegor.antiplagiacode.file.FileEntity;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Getter
 @Setter
 @Entity
 @ToString
-@Table(name = "files")
-public class FileEntity {
+@Table(name = "comparison_result_entity",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_compared_file_id",
+                    columnNames = {"original_file_id", "compared_file_id"}
+            )
+        }
+)
+public class ComparisonResultEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "storage_id", nullable = false, unique = true)
-    private String storageId;
-
-    @Column(name = "filename", nullable = false)
-    private String filename;
-
-    @Column(name = "upload_date", nullable = false)
-    private LocalDateTime uploadDate;
-
-    @Column(name = "file_size_byte", nullable = false)
-    private Integer fileSizeByte;
+    @Column(name = "result", nullable = false, precision = 5, scale = 2)
+    private BigDecimal result;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity student;
+    @JoinColumn(name = "original_file_id", nullable = false)
+    private FileEntity originalFile;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
-    private TaskEntity task;
+    @JoinColumn(name = "compared_file_id", nullable = false)
+    private FileEntity comparedFile;
 
     @Override
     public final boolean equals(Object o) {
@@ -51,7 +48,7 @@ public class FileEntity {
         Class<?> oEffectiveClass = o instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        FileEntity that = (FileEntity) o;
+        ComparisonResultEntity that = (ComparisonResultEntity) o;
         return getId() != null && Objects.equals(getId(), that.getId());
     }
 
