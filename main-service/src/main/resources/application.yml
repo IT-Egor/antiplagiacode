@@ -27,6 +27,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  output:
+    ansi:
+      enabled: ALWAYS
 
 logbook:
   format:

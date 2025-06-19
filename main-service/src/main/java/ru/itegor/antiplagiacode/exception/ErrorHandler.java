@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import ru.itegor.antiplagiacode.exception.exceptions.AccessLevelException;
+import ru.itegor.antiplagiacode.exception.exceptions.BadRequestException;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 
 @Slf4j
@@ -60,6 +61,18 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleHandlerMethodValidationException(HandlerMethodValidationException e) {
         String reasonMessage = "Handler method not valid";
+        log.error("BAD_REQUEST: {}", reasonMessage, e);
+        return ErrorResponse.builder()
+                .message(e.getMessage())
+                .reason(reasonMessage)
+                .status(HttpStatus.BAD_REQUEST.value())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequestException(BadRequestException e) {
+        String reasonMessage = "Bad request";
         log.error("BAD_REQUEST: {}", reasonMessage, e);
         return ErrorResponse.builder()
                 .message(e.getMessage())

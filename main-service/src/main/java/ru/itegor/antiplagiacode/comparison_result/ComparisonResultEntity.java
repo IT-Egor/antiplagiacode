@@ -14,7 +14,7 @@ import java.util.Objects;
 @Setter
 @Entity
 @ToString
-@Table(name = "comparison_result_entity",
+@Table(name = "comparison_results",
         uniqueConstraints = {
             @UniqueConstraint(
                     name = "uk_compared_file_id",
@@ -26,7 +26,7 @@ public class ComparisonResultEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @Column(name = "result", nullable = false, precision = 5, scale = 2)
     private BigDecimal result;
