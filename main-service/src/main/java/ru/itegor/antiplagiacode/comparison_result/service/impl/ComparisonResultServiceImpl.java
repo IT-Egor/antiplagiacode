@@ -19,10 +19,7 @@ import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.file.FileEntity;
 import ru.itegor.antiplagiacode.file.FileRepository;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -189,16 +186,25 @@ public class ComparisonResultServiceImpl implements ComparisonResultService {
     }
 
     private List<ComparisonResultEntity> findMirrors(List<ComparisonResultEntity> comparisonResults) {
-        String values = comparisonResults.stream()
-                .map(r -> String.format("(%d, %d)", r.getComparedFile().getId(), r.getOriginalFile().getId()))
-                .collect(Collectors.joining(","));
+        if (comparisonResults.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        Query query = entityManager.createNativeQuery(
-                "SELECT cr.* FROM comparison_results cr " +
-                        "WHERE (cr.original_file_id, cr.compared_file_id) " +
-                        "IN (" + values + ")",
-                ComparisonResultEntity.class
+        String values = String.join(",",
+                Collections.nCopies(comparisonResults.size(), "(?, ?)")
         );
+
+        String sql = "SELECT * FROM comparison_results " +
+                "WHERE (original_file_id, compared_file_id) IN (VALUES " + values + ")";
+
+        Query query = entityManager.createNativeQuery(sql, ComparisonResultEntity.class);
+
+        int index = 1;
+        for (ComparisonResultEntity result : comparisonResults) {
+            query.setParameter(index++, result.getComparedFile().getId());
+            query.setParameter(index++, result.getOriginalFile().getId());
+        }
+
         return query.getResultList();
     }
 }
