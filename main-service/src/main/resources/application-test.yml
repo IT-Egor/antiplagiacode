@@ -1,15 +1,6 @@
 server:
   port: 8080
 
-logging:
-  level:
-    org.springframework.web: INFO
-    org.springframework.orm.jpa: INFO
-    org.springframework.transaction: INFO
-    org.springframework.transaction.interceptor: INFO
-    org.springframework.orm.jpa.JpaTransactionManager: INFO
-    org.zalando.logbook: INFO
-
 spring:
   sql:
     init:
@@ -33,6 +24,20 @@ spring:
   output:
     ansi:
       enabled: ALWAYS
+
+minio:
+  url: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.orm.jpa: INFO
+    org.springframework.transaction: INFO
+    org.springframework.transaction.interceptor: INFO
+    org.springframework.orm.jpa.JpaTransactionManager: INFO
+    org.zalando.logbook: INFO
 
 logbook:
   format:
