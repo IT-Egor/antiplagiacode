@@ -28,17 +28,14 @@ public class FileEntity {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "storage_id", nullable = false, unique = true)
-    private String storageId;
+    @Column(name = "object_name", nullable = false, unique = true)
+    private String objectName;
 
-    @Column(name = "filename", nullable = false)
-    private String filename;
-
-    @Column(name = "upload_date", nullable = false)
-    private LocalDateTime uploadDate;
+    @Column(name = "upload_timestamp", nullable = false)
+    private LocalDateTime uploadTimestamp;
 
     @Column(name = "file_size_byte", nullable = false)
-    private Integer fileSizeByte;
+    private Long fileSizeByte;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)

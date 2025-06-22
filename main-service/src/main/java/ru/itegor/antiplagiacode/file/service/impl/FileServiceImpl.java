@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.file.FileEntity;
 import ru.itegor.antiplagiacode.file.FileMapper;
@@ -12,6 +13,7 @@ import ru.itegor.antiplagiacode.file.FileRepository;
 import ru.itegor.antiplagiacode.file.dto.FileMetadataDto;
 import ru.itegor.antiplagiacode.file.dto.FileResponseDto;
 import ru.itegor.antiplagiacode.file.service.FileService;
+import ru.itegor.antiplagiacode.storage.S3Client;
 import ru.itegor.antiplagiacode.student.StudentRepository;
 import ru.itegor.antiplagiacode.task.TaskEntity;
 import ru.itegor.antiplagiacode.task.TaskRepository;
@@ -20,7 +22,6 @@ import ru.itegor.antiplagiacode.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Random;
 
 @Service
 @Transactional
@@ -31,6 +32,7 @@ public class FileServiceImpl implements FileService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final StudentRepository studentRepository;
+    private final S3Client s3Client;
 
     @Override
     public Page<FileResponseDto> getAll(Pageable pageable) {
@@ -44,24 +46,28 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public FileResponseDto upload(Long studentId, Long taskId) {
+    public FileResponseDto upload(Long studentId, Long taskId, MultipartFile file) {
         UserEntity student = findStudentById(studentId);
         TaskEntity task = findTaskById(taskId);
         checkStudentInTask(task, student);
 
-        FileEntity fileEntity = new FileEntity();
+        FileEntity fileEntity = findFileByStudentIdAndTaskId(studentId, taskId);
         fileEntity.setStudent(student);
         fileEntity.setTask(task);
-        fileMapper.setFileMetadata(createFile(), fileEntity);
 
-        return fileMapper.toFileResponseDto(fileRepository.save(fileEntity));
-    }
+        String prefix = String.format("task-id/%d/student-id/%d/", taskId, studentId);
+        String objectName = prefix + file.getOriginalFilename();
 
-    @Override
-    public FileResponseDto patch(Long id) {
-        FileEntity fileEntity = findById(id);
-        fileMapper.setFileMetadata(createFile(), fileEntity);
-        return fileMapper.toFileResponseDto(fileRepository.save(fileEntity));
+        fileMapper.setFileMetadata(createFileMetadataDto(objectName, file.getSize()), fileEntity);
+        FileResponseDto response = fileMapper.toFileResponseDto(fileRepository.save(fileEntity));
+
+        List<String> objects = s3Client.listObjects(prefix, false);
+        if (!objects.isEmpty()) {
+            s3Client.deleteObjects(objects);
+        }
+        s3Client.uploadFile(objectName, file);
+
+        return response;
     }
 
     @Override
@@ -93,6 +99,10 @@ public class FileServiceImpl implements FileService {
                 new NotFoundException("File with id `%s` not found".formatted(id)));
     }
 
+    private FileEntity findFileByStudentIdAndTaskId(Long studentId, Long taskId) {
+        return fileRepository.findByStudent_IdAndTask_Id(studentId, taskId).orElse(new FileEntity());
+    }
+
     private UserEntity findStudentById(Long studentId) {
         return userRepository.findById(studentId).orElseThrow(() ->
                 new NotFoundException("Student with id `%s` not found".formatted(studentId)));
@@ -109,13 +119,11 @@ public class FileServiceImpl implements FileService {
                 new NotFoundException("Task with id `%s` not found".formatted(id)));
     }
 
-    private FileMetadataDto createFile() {
-        Random random = new Random();
+    private FileMetadataDto createFileMetadataDto(String objectName, Long fileSizeByte) {
         return new FileMetadataDto(
-                String.format("%s", random.nextInt()),
-                "filename" + random.nextInt(),
+                objectName,
                 LocalDateTime.now(),
-                random.nextInt(1000000)
+                fileSizeByte
         );
     }
 }

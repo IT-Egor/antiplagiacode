@@ -10,10 +10,9 @@ import java.time.LocalDateTime;
 @Value
 public class FileResponseDto {
     Long id;
-    String storageId;
-    String filename;
-    LocalDateTime uploadDate;
-    Integer fileSizeByte;
+    String objectName;
+    LocalDateTime uploadTimestamp;
+    Long fileSizeByte;
     Long studentId;
     Long taskId;
 }

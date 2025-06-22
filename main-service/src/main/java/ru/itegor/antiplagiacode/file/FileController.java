@@ -9,6 +9,7 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import ru.itegor.antiplagiacode.file.dto.FileResponseDto;
 import ru.itegor.antiplagiacode.file.service.FileService;
 
@@ -35,14 +36,10 @@ public class FileController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FileResponseDto create(@RequestParam Long studentId, @RequestParam Long taskId) {
-        return fileService.upload(studentId, taskId);
-    }
-
-    @PatchMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public FileResponseDto patch(@PathVariable Long id) {
-        return fileService.patch(id);
+    public FileResponseDto create(@RequestParam Long studentId,
+                                  @RequestParam Long taskId,
+                                  @RequestParam("file") MultipartFile file) {
+        return fileService.upload(studentId, taskId, file);
     }
 
     @ResponseStatus(HttpStatus.OK)
