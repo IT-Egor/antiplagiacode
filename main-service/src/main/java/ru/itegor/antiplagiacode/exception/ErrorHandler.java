@@ -13,6 +13,8 @@ import ru.itegor.antiplagiacode.exception.exceptions.AccessLevelException;
 import ru.itegor.antiplagiacode.exception.exceptions.BadRequestException;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 
+import java.util.Objects;
+
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
@@ -51,7 +53,7 @@ public class ErrorHandler {
         String reasonMessage = "Method argument not valid";
         log.error("BAD_REQUEST: {}", reasonMessage, e);
         return ErrorResponse.builder()
-                .message(e.getMessage())
+                .message(Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage())
                 .reason(reasonMessage)
                 .status(HttpStatus.BAD_REQUEST.value())
                 .build();

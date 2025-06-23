@@ -14,6 +14,8 @@ public interface ClassService {
 
     ClassResponseDto create(MergeClassRequestDto dto);
 
+    ClassResponseDto patch(Long id, MergeClassRequestDto dto);
+
     ClassResponseDto delete(Long id);
 
     void deleteMany(List<Long> ids);

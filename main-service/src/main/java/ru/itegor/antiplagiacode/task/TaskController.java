@@ -2,17 +2,19 @@ package ru.itegor.antiplagiacode.task;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.itegor.antiplagiacode.task.dto.MergeTaskRequestDto;
 import ru.itegor.antiplagiacode.task.dto.TaskResponseDto;
 import ru.itegor.antiplagiacode.task.service.TaskService;
+import ru.itegor.antiplagiacode.validation_groups.CreateValidation;
+import ru.itegor.antiplagiacode.validation_groups.UpdateValidation;
 
 import java.util.List;
 
@@ -76,14 +78,19 @@ public class TaskController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create task")
-    public TaskResponseDto create(@RequestBody @Valid MergeTaskRequestDto dto) {
+    public TaskResponseDto create(@RequestBody
+                                  @Validated(CreateValidation.class)
+                                  MergeTaskRequestDto dto) {
         return taskService.create(dto);
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Update task by id")
-    public TaskResponseDto patch(@PathVariable Long id, @RequestBody @Valid MergeTaskRequestDto dto) {
+    public TaskResponseDto patch(@PathVariable Long id,
+                                 @RequestBody
+                                 @Validated(UpdateValidation.class)
+                                 MergeTaskRequestDto dto) {
         return taskService.patch(id, dto);
     }
 

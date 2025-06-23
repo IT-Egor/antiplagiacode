@@ -1,5 +1,6 @@
 package ru.itegor.antiplagiacode.clazz.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,8 @@ import java.util.List;
 public class ClassServiceImpl implements ClassService {
     private final ClassMapper classMapper;
     private final ClassRepository classRepository;
+
+    private final ObjectMapper objectMapper;
 
     @Override
     public List<ClassResponseDto> getAll() {
@@ -44,6 +47,16 @@ public class ClassServiceImpl implements ClassService {
     @Override
     public ClassResponseDto create(MergeClassRequestDto dto) {
         ClassEntity clazz = classMapper.toEntity(dto);
+        ClassEntity resultClass = classRepository.save(clazz);
+        return classMapper.toClassResponseDto(resultClass);
+    }
+
+    @Override
+    public ClassResponseDto patch(Long id, MergeClassRequestDto dto) {
+        ClassEntity clazz = findById(id);
+
+        classMapper.updateWithNull(dto, clazz);
+
         ClassEntity resultClass = classRepository.save(clazz);
         return classMapper.toClassResponseDto(resultClass);
     }

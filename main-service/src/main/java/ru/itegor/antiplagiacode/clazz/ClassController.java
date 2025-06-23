@@ -47,7 +47,12 @@ public class ClassController {
         return classService.create(dto);
     }
 
-    //TODO add patch method
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Update class by id")
+    public ClassResponseDto patch(@PathVariable Long id, @RequestBody @Valid MergeClassRequestDto dto) {
+        return classService.patch(id, dto);
+    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
