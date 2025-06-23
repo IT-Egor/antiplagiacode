@@ -1,4 +1,4 @@
-package ru.itegor.antiplagiacode.storage.minio;
+package ru.itegor.antiplagiacode.storage.client.config;
 
 import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Value;

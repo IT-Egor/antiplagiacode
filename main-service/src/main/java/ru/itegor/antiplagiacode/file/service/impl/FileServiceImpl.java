@@ -11,9 +11,10 @@ import ru.itegor.antiplagiacode.file.FileEntity;
 import ru.itegor.antiplagiacode.file.FileMapper;
 import ru.itegor.antiplagiacode.file.FileRepository;
 import ru.itegor.antiplagiacode.file.dto.FileMetadataDto;
+import ru.itegor.antiplagiacode.file.dto.FileMetadataResponseDto;
 import ru.itegor.antiplagiacode.file.dto.FileResponseDto;
 import ru.itegor.antiplagiacode.file.service.FileService;
-import ru.itegor.antiplagiacode.storage.S3Client;
+import ru.itegor.antiplagiacode.storage.service.S3Service;
 import ru.itegor.antiplagiacode.student.StudentRepository;
 import ru.itegor.antiplagiacode.task.TaskEntity;
 import ru.itegor.antiplagiacode.task.TaskRepository;
@@ -32,66 +33,65 @@ public class FileServiceImpl implements FileService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final StudentRepository studentRepository;
-    private final S3Client s3Client;
+    private final S3Service s3Service;
 
     @Override
-    public Page<FileResponseDto> getAll(Pageable pageable) {
+    public Page<FileMetadataResponseDto> getAll(Pageable pageable) {
         Page<FileEntity> files = fileRepository.findAll(pageable);
-        return files.map(fileMapper::toFileResponseDto);
+        return files.map(fileMapper::toFileMetadataResponseDto);
     }
 
     @Override
-    public FileResponseDto getOne(Long id) {
-        return fileMapper.toFileResponseDto(findById(id));
+    public FileMetadataResponseDto getOne(Long id) {
+        return fileMapper.toFileMetadataResponseDto(findById(id));
     }
 
     @Override
-    public FileResponseDto upload(Long studentId, Long taskId, MultipartFile file) {
+    public FileMetadataResponseDto upload(Long studentId, Long taskId, MultipartFile file) {
         UserEntity student = findStudentById(studentId);
         TaskEntity task = findTaskById(taskId);
         checkStudentInTask(task, student);
 
+        String objectName = s3Service.createObjectName(taskId, studentId, file.getOriginalFilename());
+
         FileEntity fileEntity = findFileByStudentIdAndTaskId(studentId, taskId);
         fileEntity.setStudent(student);
         fileEntity.setTask(task);
-
-        String prefix = String.format("task-id/%d/student-id/%d/", taskId, studentId);
-        String objectName = prefix + file.getOriginalFilename();
-
         fileMapper.setFileMetadata(createFileMetadataDto(objectName, file.getSize()), fileEntity);
-        FileResponseDto response = fileMapper.toFileResponseDto(fileRepository.save(fileEntity));
 
-        List<String> objects = s3Client.listObjects(prefix, false);
-        if (!objects.isEmpty()) {
-            s3Client.deleteObjects(objects);
-        }
-        s3Client.uploadFile(objectName, file);
+        FileMetadataResponseDto response = fileMapper.toFileMetadataResponseDto(fileRepository.save(fileEntity));
+
+        s3Service.uploadFile(objectName, file);
 
         return response;
     }
 
     @Override
-    public byte[] download(Long storageId) {
-        throw new RuntimeException("Not implemented");
+    public FileResponseDto download(Long id) {
+        FileEntity fileEntity = findById(id);
+        String objectName = fileEntity.getObjectName();
+        String fileName = s3Service.extractFileName(objectName);
+        return new FileResponseDto(
+                fileName,
+                s3Service.downloadFile(objectName));
     }
 
     @Override
-    public List<String> getFileLines(Long storageId) {
-        throw new RuntimeException("Not implemented");
-    }
-
-    @Override
-    public FileResponseDto delete(Long id) {
+    public FileMetadataResponseDto delete(Long id) {
         FileEntity fileEntity = fileRepository.findById(id).orElse(null);
         if (fileEntity != null) {
             fileRepository.delete(fileEntity);
         }
-        return fileMapper.toFileResponseDto(fileEntity);
+        FileMetadataResponseDto response = fileMapper.toFileMetadataResponseDto(fileEntity);
+        s3Service.deleteFile(response.getObjectName());
+        return response;
     }
 
     @Override
     public void deleteMany(List<Long> ids) {
+        List<FileEntity> fileEntities = fileRepository.findAllById(ids);
         fileRepository.deleteAllById(ids);
+        s3Service.deleteFiles(fileEntities.stream().map(FileEntity::getObjectName).toList());
     }
 
     private FileEntity findById(Long id) {

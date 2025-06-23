@@ -1,4 +1,4 @@
-package ru.itegor.antiplagiacode.storage.minio;
+package ru.itegor.antiplagiacode.storage.client.impl;
 
 import io.minio.*;
 import io.minio.messages.DeleteError;
@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 import ru.itegor.antiplagiacode.exception.exceptions.FileStorageException;
-import ru.itegor.antiplagiacode.storage.S3Client;
+import ru.itegor.antiplagiacode.storage.client.S3Client;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +90,7 @@ public class MinioStorageClient implements S3Client {
     }
 
     @Override
-    public List<String> deleteObjects(List<String> objectNames) {
+    public void deleteObjects(List<String> objectNames) {
         try {
             List<DeleteObject> objects = objectNames.stream()
                     .map(DeleteObject::new)
@@ -103,11 +103,7 @@ public class MinioStorageClient implements S3Client {
                             .objects(objects)
                             .build());
 
-            List<String> deletedObjects = new ArrayList<>();
-            for (Result<DeleteError> result : results) {
-                deletedObjects.add(result.get().objectName());
-            }
-            return deletedObjects;
+            for (Result<DeleteError> result : results);
         } catch (Exception e) {
             throw new FileStorageException("Failed to delete objects", e);
         }
@@ -125,10 +121,6 @@ public class MinioStorageClient implements S3Client {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public String extractFileName(String objectName) {
-        return objectName.substring(objectName.lastIndexOf('/') + 1);
     }
 
     private void initializeBucket(String bucketName, String accessKey) {

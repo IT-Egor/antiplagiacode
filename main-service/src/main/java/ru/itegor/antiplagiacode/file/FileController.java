@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.itegor.antiplagiacode.file.dto.FileMetadataResponseDto;
 import ru.itegor.antiplagiacode.file.dto.FileResponseDto;
 import ru.itegor.antiplagiacode.file.service.FileService;
 
@@ -23,46 +24,41 @@ public class FileController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public PagedModel<FileResponseDto> getAll(@ParameterObject Pageable pageable) {
-        Page<FileResponseDto> fileResponseDtos = fileService.getAll(pageable);
+    public PagedModel<FileMetadataResponseDto> getAll(@ParameterObject Pageable pageable) {
+        Page<FileMetadataResponseDto> fileResponseDtos = fileService.getAll(pageable);
         return new PagedModel<>(fileResponseDtos);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public FileResponseDto getOne(@PathVariable Long id) {
+    public FileMetadataResponseDto getOne(@PathVariable Long id) {
         return fileService.getOne(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FileResponseDto create(@RequestParam Long studentId,
-                                  @RequestParam Long taskId,
-                                  @RequestParam("file") MultipartFile file) {
+    public FileMetadataResponseDto create(@RequestParam Long studentId,
+                                          @RequestParam Long taskId,
+                                          @RequestParam("file") MultipartFile file) {
         return fileService.upload(studentId, taskId, file);
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/download/{storageId}")
-    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable Long storageId) {
-        byte[] data = fileService.download(storageId);
+    @GetMapping("/download/{id}")
+    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable Long id) {
+        FileResponseDto dto = fileService.download(id);
+        byte[] data = dto.getFile();
         ByteArrayResource resource = new ByteArrayResource(data);
         return ResponseEntity.ok()
                 .contentLength(data.length)
                 .header("Content-type", "application/octet-stream")
-                .header("Content-disposition", "attachment; filename=\"" + storageId + "\"")
+                .header("Content-disposition", String.format("attachment; filename=\"%s\"", dto.getFileName()))
                 .body(resource);
-    }
-
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/lines/{storageId}")
-    public List<String> getFileLines(@PathVariable Long storageId) {
-        return fileService.getFileLines(storageId);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public FileResponseDto delete(@PathVariable Long id) {
+    public FileMetadataResponseDto delete(@PathVariable Long id) {
         return fileService.delete(id);
     }
 

@@ -1,4 +1,4 @@
-package ru.itegor.antiplagiacode.storage;
+package ru.itegor.antiplagiacode.storage.client;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,7 +13,7 @@ public interface S3Client {
 
     void deleteObject(String objectName);
 
-    List<String> deleteObjects(List<String> objectNames);
+    void deleteObjects(List<String> objectNames);
 
     boolean isObjectExists(String objectName);
 }
