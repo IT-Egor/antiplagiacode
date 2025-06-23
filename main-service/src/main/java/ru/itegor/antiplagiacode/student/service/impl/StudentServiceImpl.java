@@ -74,6 +74,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public int changeStudentsClasses(List<Long> studentIds, Long classId) {
+        findClassById(classId);
         return studentRepository.updateAllByStudentIdIn(studentIds, classId);
     }
 

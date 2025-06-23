@@ -55,24 +55,10 @@ public class TaskController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/by-student-id/relevant")
-    @Operation(summary = "Get relevant tasks by student id", description = "Get relevant tasks for the student. A task is considered relevant if its start date has passed and its end date has not yet passed")
-    public List<TaskResponseDto> getRelevantTasksForStudent(@RequestParam Long studentId) {
-        return taskService.getRelevantTasksForStudent(studentId);
-    }
-
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/by-class-id/irrelevant")
     @Operation(summary = "Get irrelevant tasks by class id", description = "Get irrelevant tasks for the class. A task is considered irrelevant if its start date has not passed or its end date has passed")
     public List<TaskResponseDto> getIrrelevantTasksForClass(@RequestParam Long classId) {
         return taskService.getIrrelevantTasksForClass(classId);
-    }
-
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/by-student-id/irrelevant")
-    @Operation(summary = "Get irrelevant tasks by student id", description = "Get irrelevant tasks for the student. A task is considered irrelevant if its start date has not passed or its end date has passed")
-    public List<TaskResponseDto> getIrrelevantTasksForStudent(@RequestParam Long studentId) {
-        return taskService.getIrrelevantTasksForStudent(studentId);
     }
 
     @PostMapping

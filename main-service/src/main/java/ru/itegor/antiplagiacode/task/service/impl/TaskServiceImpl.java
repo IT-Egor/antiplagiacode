@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.itegor.antiplagiacode.clazz.ClassEntity;
 import ru.itegor.antiplagiacode.clazz.ClassRepository;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
+import ru.itegor.antiplagiacode.file.FileRepository;
 import ru.itegor.antiplagiacode.task.TaskEntity;
 import ru.itegor.antiplagiacode.task.TaskMapper;
 import ru.itegor.antiplagiacode.task.TaskRepository;
@@ -25,6 +26,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
     private final TaskRepository taskRepository;
     private final ClassRepository classRepository;
+    private final FileRepository fileRepository;
 
     @Override
     public Page<TaskResponseDto> getAll(Pageable pageable) {
@@ -53,20 +55,10 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskResponseDto> getRelevantTasksForStudent(Long studentId) {
-        throw new RuntimeException("Not implemented");
-    }
-
-    @Override
     public List<TaskResponseDto> getIrrelevantTasksForClass(Long classId) {
         return taskRepository.findIrrelevantForClass(classId,LocalDate.now()).stream()
                 .map(taskMapper::toTaskResponseDto)
                 .toList();
-    }
-
-    @Override
-    public List<TaskResponseDto> getIrrelevantTasksForStudent(Long studentId) {
-        throw new RuntimeException("Not implemented");
     }
 
     @Override

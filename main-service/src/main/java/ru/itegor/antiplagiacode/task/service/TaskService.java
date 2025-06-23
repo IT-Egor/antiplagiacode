@@ -16,11 +16,7 @@ public interface TaskService {
 
     List<TaskResponseDto> getRelevantTasksForClass(Long classId);
 
-    List<TaskResponseDto> getRelevantTasksForStudent(Long studentId);
-
     List<TaskResponseDto> getIrrelevantTasksForClass(Long classId);
-
-    List<TaskResponseDto> getIrrelevantTasksForStudent(Long studentId);
 
     TaskResponseDto create(MergeTaskRequestDto dto);
 
