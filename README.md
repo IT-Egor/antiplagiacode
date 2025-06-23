@@ -54,8 +54,6 @@
 ## Инструкция по запуску
 ### Требования:
 - Docker и Docker Compose
-- Java 21+
-- Maven
 
 ### Запуск:
 1. **Клонировать репозиторий:**
@@ -64,13 +62,7 @@ git clone https://github.com/IT-Egor/antiplagiacode.git
 cd antiplagiacode
 ```
 
-2. **Выполнить сборку проекта:**  
-`!!! На данный момент выполняется с ошибкой, но ее можно игнорировать !!!`
-```bash
-mvn clean package
-```
-
-3. **Запустить сервисы:**
+2. **Запустить сервисы:**
 ```bash
 docker-compose up -d
 ```

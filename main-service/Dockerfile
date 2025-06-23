@@ -1,7 +1,16 @@
+FROM maven:3.9-eclipse-temurin-21 AS builder
+
+WORKDIR /build
+COPY ../ .
+
+WORKDIR /build/main-service
+RUN mvn clean package -DskipTests
+
 FROM eclipse-temurin:21-jre-jammy
-VOLUME /tmp
-ARG JAR_FILE=target/*.jar
-ARG JAVA_PROPS=src/main/resources/application-docker.yml
-COPY ${JAR_FILE} app.jar
-COPY ${JAVA_PROPS} application.yml
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar"]
+
+WORKDIR /app
+
+COPY --from=builder /build/main-service/target/*.jar ./app.jar
+COPY --from=builder /build/main-service/src/main/resources/application-docker.yml ./application.yml
+
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app/app.jar"]

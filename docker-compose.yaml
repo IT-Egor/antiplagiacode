@@ -1,6 +1,8 @@
 services:
   main:
-    build: ./main-service
+    build:
+      context: .
+      dockerfile: main-service/Dockerfile
     image: main-service
     container_name: main-service
     ports:
