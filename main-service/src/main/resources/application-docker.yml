@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/antiplagiacode
+    username: antiplagiacode
+    password: antiplagiacode
+  jpa:
+    hibernate:
+      ddl-auto: update
+      jdbc:
+        time_zone: UTC
+    properties:
+      hibernate:
+        format_sql: true
+  output:
+    ansi:
+      enabled: ALWAYS
+
+minio:
+  url: http://storage-minio:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: antiplagiacode
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.orm.jpa: INFO
+    org.springframework.transaction: INFO
+    org.springframework.transaction.interceptor: INFO
+    org.springframework.orm.jpa.JpaTransactionManager: INFO
+    org.zalando.logbook: TRACE
+
+logbook:
+  format:
+    style: http

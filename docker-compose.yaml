@@ -1,4 +1,23 @@
 services:
+  main:
+    build: ./main-service
+    image: main-service
+    container_name: main-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - storage-minio
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/antiplagiacode
+      - SPRING_DATASOURCE_USERNAME=antiplagiacode
+      - SPRING_DATASOURCE_PASSWORD=antiplagiacode
+      - MINIO_URL=http://storage-minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET_NAME=antiplagiacode
+      - SPRING_PROFILES_ACTIVE=docker
+
   db:
     image: postgres:16.1
     container_name: postgres
