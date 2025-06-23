@@ -1,5 +1,6 @@
 package ru.itegor.antiplagiacode.task.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
  * DTO for {@link ru.itegor.antiplagiacode.task.TaskEntity}
  */
 @Value
+@Schema(description = "Task create and update DTO")
 public class MergeTaskRequestDto {
     @NotNull(message = "Task start date is required", groups = {CreateValidation.class})
     @FutureOrPresent(message = "Task start date must be future or present",
@@ -24,5 +26,7 @@ public class MergeTaskRequestDto {
     LocalDate endDate;
 
     String description;
+
+    @NotNull(message = "Class id is required", groups = {CreateValidation.class})
     Long classId;
 }
