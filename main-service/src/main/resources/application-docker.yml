@@ -21,6 +21,11 @@ spring:
   output:
     ansi:
       enabled: ALWAYS
+  kafka:
+    bootstrap-servers: kafka:29092
+    producer:
+      properties:
+        spring.json.add.type.headers: false
 
 minio:
   url: http://storage-minio:9000
@@ -40,3 +45,7 @@ logging:
 logbook:
   format:
     style: http
+
+app:
+  kafka:
+    file-scan-topic: file-scan.v1

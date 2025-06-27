@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import ru.itegor.antiplagiacode.comparison_result.dto.ComparisonResultMessage;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.file.FileEntity;
 import ru.itegor.antiplagiacode.file.FileMapper;
@@ -13,6 +14,7 @@ import ru.itegor.antiplagiacode.file.FileRepository;
 import ru.itegor.antiplagiacode.file.dto.FileMetadataDto;
 import ru.itegor.antiplagiacode.file.dto.FileMetadataResponseDto;
 import ru.itegor.antiplagiacode.file.dto.FileResponseDto;
+import ru.itegor.antiplagiacode.file.service.ComparisonResultProducer;
 import ru.itegor.antiplagiacode.file.service.FileService;
 import ru.itegor.antiplagiacode.storage.service.S3Service;
 import ru.itegor.antiplagiacode.student.StudentRepository;
@@ -23,6 +25,7 @@ import ru.itegor.antiplagiacode.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -34,6 +37,7 @@ public class FileServiceImpl implements FileService {
     private final TaskRepository taskRepository;
     private final StudentRepository studentRepository;
     private final S3Service s3Service;
+    private final ComparisonResultProducer producer;
 
     @Override
     public Page<FileMetadataResponseDto> getAll(Pageable pageable) {
@@ -62,6 +66,8 @@ public class FileServiceImpl implements FileService {
         FileMetadataResponseDto response = fileMapper.toFileMetadataResponseDto(fileRepository.save(fileEntity));
 
         s3Service.uploadFile(objectName, file);
+
+        sendFileComparisonRequest(fileEntity);
 
         return response;
     }
@@ -94,6 +100,19 @@ public class FileServiceImpl implements FileService {
         s3Service.deleteFiles(fileEntities.stream().map(FileEntity::getObjectName).toList());
     }
 
+    private void sendFileComparisonRequest(FileEntity fileEntity) {
+        Long originalFileId = fileEntity.getId();
+        List<Long> comparedFileIds = findFilesByTaskId(fileEntity.getTask().getId()).stream()
+                .map(FileEntity::getId)
+                .collect(Collectors.toList());
+        comparedFileIds.remove(originalFileId);
+
+        producer.sendComparisonResult(new ComparisonResultMessage(
+                fileEntity.getId(),
+                comparedFileIds
+        ));
+    }
+
     private FileEntity findById(Long id) {
         return fileRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("File with id `%s` not found".formatted(id)));
@@ -101,6 +120,10 @@ public class FileServiceImpl implements FileService {
 
     private FileEntity findFileByStudentIdAndTaskId(Long studentId, Long taskId) {
         return fileRepository.findByStudent_IdAndTask_Id(studentId, taskId).orElse(new FileEntity());
+    }
+
+    private List<FileEntity> findFilesByTaskId(Long taskId) {
+        return fileRepository.findAllByTask_Id(taskId);
     }
 
     private UserEntity findStudentById(Long studentId) {
