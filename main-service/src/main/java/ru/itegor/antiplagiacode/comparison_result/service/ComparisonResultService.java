@@ -3,8 +3,7 @@ package ru.itegor.antiplagiacode.comparison_result.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.itegor.antiplagiacode.comparison_result.dto.ComparisonResultResponseDto;
-import ru.itegor.antiplagiacode.comparison_result.dto.CreateComparisonResultRequestDto;
-import ru.itegor.antiplagiacode.comparison_result.dto.UpdateComparisonResultRequestDto;
+import ru.itegor.antiplagiacode.comparison_result.dto.MergeComparisonResultRequestDto;
 
 import java.util.List;
 
@@ -15,9 +14,7 @@ public interface ComparisonResultService {
 
     List<ComparisonResultResponseDto> getAllByFileId(Long id);
 
-    List<ComparisonResultResponseDto> createMany(List<CreateComparisonResultRequestDto> dto);
-
-    List<ComparisonResultResponseDto> patchMany(List<UpdateComparisonResultRequestDto> dtos);
+    List<ComparisonResultResponseDto> mergeMany(MergeComparisonResultRequestDto dto);
 
     void deleteManyByOriginalFileId(Long id);
 

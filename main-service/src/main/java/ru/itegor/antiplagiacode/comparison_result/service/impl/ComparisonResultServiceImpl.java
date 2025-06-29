@@ -10,17 +10,18 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.itegor.antiplagiacode.comparison_result.ComparisonResultEntity;
 import ru.itegor.antiplagiacode.comparison_result.ComparisonResultMapper;
 import ru.itegor.antiplagiacode.comparison_result.ComparisonResultRepository;
+import ru.itegor.antiplagiacode.comparison_result.dto.ComparisonResultDto;
 import ru.itegor.antiplagiacode.comparison_result.dto.ComparisonResultResponseDto;
-import ru.itegor.antiplagiacode.comparison_result.dto.CreateComparisonResultRequestDto;
-import ru.itegor.antiplagiacode.comparison_result.dto.UpdateComparisonResultRequestDto;
+import ru.itegor.antiplagiacode.comparison_result.dto.MergeComparisonResultRequestDto;
 import ru.itegor.antiplagiacode.comparison_result.service.ComparisonResultService;
-import ru.itegor.antiplagiacode.exception.exceptions.BadRequestException;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.file.FileEntity;
 import ru.itegor.antiplagiacode.file.FileRepository;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -51,43 +52,13 @@ public class ComparisonResultServiceImpl implements ComparisonResultService {
     }
 
     @Override
-    public List<ComparisonResultResponseDto> createMany(List<CreateComparisonResultRequestDto> dto) {
-        checkThatAllFilesExistsById(
-                dto.stream().map(CreateComparisonResultRequestDto::getOriginalFileId).collect(Collectors.toSet()),
-                dto.stream().map(CreateComparisonResultRequestDto::getComparedFileId).collect(Collectors.toSet())
-        );
-        List<ComparisonResultEntity> comparisonResults = dto.stream().map(comparisonResultMapper::toEntity).toList();
-        comparisonResults = addMirrors(comparisonResults);
-        List<ComparisonResultEntity> resultComparisonResultEntity = comparisonResultRepository.saveAll(comparisonResults);
-        if (resultComparisonResultEntity.size() != dto.size() * 2) {
-            throw new InternalError("Error while creating comparison results");
-        }
-        return resultComparisonResultEntity.stream().map(comparisonResultMapper::toComparisonResultResponseDto).toList();
-    }
-
-    @Override
-    public List<ComparisonResultResponseDto> patchMany(List<UpdateComparisonResultRequestDto> dtos) {
-        List<ComparisonResultEntity> comparisonResults = comparisonResultRepository.findAllById(
-                dtos.stream().map(UpdateComparisonResultRequestDto::getId).toList());
-        if (comparisonResults.isEmpty()) {
-            throw new NotFoundException("Comparison result with some ids not found");
-        }
-
-        checkThatAllFilesExistsById(
-                dtos.stream().map(UpdateComparisonResultRequestDto::getOriginalFileId).collect(Collectors.toSet()),
-                dtos.stream().map(UpdateComparisonResultRequestDto::getComparedFileId).collect(Collectors.toSet())
-        );
-        for (ComparisonResultEntity comparisonResult : comparisonResults) {
-            UpdateComparisonResultRequestDto dto = findUpdateDtoById(dtos, comparisonResult.getId());
-            comparisonResultMapper.updateWithNull(dto, comparisonResult);
-        }
-
-        comparisonResults = updateMirrors(comparisonResults);
-        List<ComparisonResultEntity> resultComparisonResult = comparisonResultRepository.saveAll(comparisonResults);
-        if (resultComparisonResult.size() != dtos.size() * 2) {
-            throw new InternalError("Error while patching comparison results");
-        }
-        return resultComparisonResult.stream().map(comparisonResultMapper::toComparisonResultResponseDto).toList();
+    public List<ComparisonResultResponseDto> mergeMany(MergeComparisonResultRequestDto dto) {
+        List<ComparisonResultEntity> comparisonResults = comparisonResultRepository.findAllByOriginalFile_Id(dto.getOriginalFileId());
+        mergerResults(dto, comparisonResults);
+        addMirrors(comparisonResults);
+        return comparisonResultRepository.saveAll(comparisonResults).stream()
+                .map(comparisonResultMapper::toComparisonResultResponseDto)
+                .toList();
     }
 
     @Override
@@ -103,86 +74,80 @@ public class ComparisonResultServiceImpl implements ComparisonResultService {
         comparisonResultRepository.deleteAllById(ids);
     }
 
+    private void mergerResults(MergeComparisonResultRequestDto dto, List<ComparisonResultEntity> comparisonResults) {
+        FileEntity originalFileEntity = findFileById(dto.getOriginalFileId());
+        List<FileEntity> fileEntities = fileRepository.findAllByTask_Id(originalFileEntity.getTask().getId());
+        Long originalFileId = dto.getOriginalFileId();
+
+        for (ComparisonResultDto comparisonResultDto : dto.getComparisonResults()) {
+            Long comparedFileId = comparisonResultDto.getComparedFileId();
+            Optional<ComparisonResultEntity> comparisonResultOpt =
+                    findByOriginalAndComparedFileId(comparisonResults, originalFileId, comparedFileId);
+
+            if (comparisonResultOpt.isPresent()) {
+                ComparisonResultEntity comparisonResult = comparisonResultOpt.get();
+                comparisonResult.setResult(comparisonResultDto.getResult());
+            } else {
+                ComparisonResultEntity comparisonResult = new ComparisonResultEntity();
+                comparisonResult.setResult(comparisonResultDto.getResult());
+                comparisonResult.setOriginalFile(originalFileEntity);
+                comparisonResult.setComparedFile(findFileById(fileEntities, comparedFileId));
+                comparisonResults.add(comparisonResult);
+            }
+        }
+    }
+
     private ComparisonResultEntity findById(Long id) {
         return comparisonResultRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("Comparison result with id `%s` not found".formatted(id)));
     }
 
-    private void checkThatAllFilesExistsById(Set<Long> originalFilesIds, Set<Long> comparedFilesIds) {
-        List<FileEntity> originalFiles = fileRepository.findAllById(originalFilesIds);
-        List<FileEntity> comparedFiles = fileRepository.findAllById(comparedFilesIds);
-        if (originalFiles.size() != originalFilesIds.size()
-                || comparedFiles.size() != comparedFilesIds.size()
-                || originalFiles.isEmpty()
-                || comparedFiles.isEmpty()) {
-            throw new NotFoundException("Some of the files were not found");
-        }
+    private FileEntity findFileById(Long id) {
+        return fileRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("File with id `%s` not found".formatted(id)));
     }
 
-    private UpdateComparisonResultRequestDto findUpdateDtoById(List<UpdateComparisonResultRequestDto> dtos, Long id) {
-        int count = 0;
-        UpdateComparisonResultRequestDto updateDto = null;
-        for (UpdateComparisonResultRequestDto dto : dtos) {
-            if (dto.getId().equals(id)) {
-                count++;
-                updateDto = dto;
+    private FileEntity findFileById(List<FileEntity> fileEntities, Long id) {
+        for (FileEntity fileEntity : fileEntities) {
+            if (fileEntity.getId().equals(id)) {
+                return fileEntity;
             }
         }
-        if (count == 0) {
-            throw new NotFoundException("Comparison result with id `%s` not found".formatted(id));
-        } else if (count > 1) {
-            throw new BadRequestException("Comparison result with id `%s` found more than once".formatted(id));
-        } else {
-            return updateDto;
-        }
+        throw new NotFoundException("File with id `%s` not found".formatted(id));
     }
 
-    private List<ComparisonResultEntity> addMirrors(List<ComparisonResultEntity> comparisonResults) {
-        List<ComparisonResultEntity> mirrorResults = new ArrayList<>(comparisonResults);
-        for (ComparisonResultEntity result : comparisonResults) {
-            ComparisonResultEntity mirrorResult = new ComparisonResultEntity();
-            mirrorResult.setId(result.getId());
-            mirrorResult.setOriginalFile(result.getComparedFile());
-            mirrorResult.setComparedFile(result.getOriginalFile());
-            mirrorResult.setResult(result.getResult());
-            mirrorResults.add(mirrorResult);
+    private Optional<ComparisonResultEntity> findByOriginalAndComparedFileId(List<ComparisonResultEntity> comparisonResults,
+                                                                   Long originalFileId,
+                                                                   Long comparedFileId) {
+        for (ComparisonResultEntity comparisonResultEntity : comparisonResults) {
+            if (comparisonResultEntity.getOriginalFile().getId().equals(originalFileId) &&
+                    comparisonResultEntity.getComparedFile().getId().equals(comparedFileId)) {
+                return Optional.of(comparisonResultEntity);
+            }
         }
-        return mirrorResults;
+        return Optional.empty();
     }
 
-    private List<ComparisonResultEntity> updateMirrors(List<ComparisonResultEntity> comparisonResults) {
-        List<ComparisonResultEntity> mirrorResults = new ArrayList<>(comparisonResults);
+    private void addMirrors(List<ComparisonResultEntity> comparisonResults) {
         List<ComparisonResultEntity> mirrors = findMirrors(comparisonResults);
-        if (mirrorResults.size() != mirrors.size()) {
-            throw new NotFoundException("Some comparison results where not found");
-        }
-        for (ComparisonResultEntity result : comparisonResults) {
-            ComparisonResultEntity mirrorResult = findByOriginalFileIdAndComparedFileIdInMirrors(
-                    result.getComparedFile().getId(),
-                    result.getOriginalFile().getId(),
-                    mirrors);
-            mirrorResult.setResult(result.getResult());
-            mirrorResults.add(mirrorResult);
-        }
-        return mirrorResults;
-    }
+        for (ComparisonResultEntity comparisonResult : comparisonResults) {
+            Long originalFileId = comparisonResult.getOriginalFile().getId();
+            Long comparedFileId = comparisonResult.getComparedFile().getId();
 
-    private ComparisonResultEntity findByOriginalFileIdAndComparedFileIdInMirrors(Long originalFileId,
-                                                                                  Long comparedFileId,
-                                                                                  List<ComparisonResultEntity> mirrors) {
-        int count = 0;
-        ComparisonResultEntity mirrorResult = null;
-        for (ComparisonResultEntity mirror : mirrors) {
-            if (mirror.getOriginalFile().getId().equals(originalFileId)
-                    && mirror.getComparedFile().getId().equals(comparedFileId)) {
-                count++;
-                mirrorResult = mirror;
+            Optional<ComparisonResultEntity> mirrorOpt = findByOriginalAndComparedFileId(
+                    mirrors,
+                    comparedFileId,
+                    originalFileId
+            );
+            ComparisonResultEntity mirror = mirrorOpt.orElse(new ComparisonResultEntity());
+            mirror.setResult(comparisonResult.getResult());
+            mirror.setOriginalFile(comparisonResult.getComparedFile());
+            mirror.setComparedFile(comparisonResult.getOriginalFile());
+            if (mirrorOpt.isEmpty()) {
+                mirrors.add(mirror);
             }
         }
-        if (count != 1) {
-            throw new BadRequestException("Comparison result with originalFileId `%s` and comparedFileId `%s` not found or found more than once");
-        }
-        return mirrorResult;
+        comparisonResults.addAll(mirrors);
     }
 
     private List<ComparisonResultEntity> findMirrors(List<ComparisonResultEntity> comparisonResults) {

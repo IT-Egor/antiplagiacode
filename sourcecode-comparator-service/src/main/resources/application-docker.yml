@@ -19,6 +19,7 @@ app:
     bootstrap-server: http://main:8080
     path:
       download: /api/v1/file/download/{fileId}
+      post-comparison-results: /api/v1/comparison-result
   kafka:
     file-scan-topic: file-scan.v1
     group-id: file-scan

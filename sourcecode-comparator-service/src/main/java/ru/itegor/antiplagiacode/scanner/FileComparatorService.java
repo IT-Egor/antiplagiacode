@@ -30,6 +30,7 @@ public class FileComparatorService {
         log.info("Message: {}", message);
 
         MergeComparisonResultRequestDto results = getResults(message);
+        postResults(results);
 
         log.info("Results: {}", results);
     }
@@ -79,5 +80,13 @@ public class FileComparatorService {
         }
 
         return new MergeComparisonResultRequestDto(message.getOriginalFileId(), results);
+    }
+
+    private void postResults(MergeComparisonResultRequestDto results) {
+        try {
+            client.postComparisonResults(results);
+        } catch (Exception e) {
+            log.error("Error while posting results", e);
+        }
     }
 }

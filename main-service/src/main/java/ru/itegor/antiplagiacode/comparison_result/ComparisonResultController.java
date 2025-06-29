@@ -11,15 +11,14 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.itegor.antiplagiacode.comparison_result.dto.ComparisonResultResponseDto;
-import ru.itegor.antiplagiacode.comparison_result.dto.CreateComparisonResultRequestDto;
-import ru.itegor.antiplagiacode.comparison_result.dto.UpdateComparisonResultRequestDto;
+import ru.itegor.antiplagiacode.comparison_result.dto.MergeComparisonResultRequestDto;
 import ru.itegor.antiplagiacode.comparison_result.service.ComparisonResultService;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/comparisonResult")
+@RequestMapping("/api/v1/comparison-result")
 @Tag(name = "Comparison result", description = "Comparison result API. For files comparison results")
 public class ComparisonResultController {
     private final ComparisonResultService comparisonResultService;
@@ -48,16 +47,9 @@ public class ComparisonResultController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create many comparison results", description = "Create many comparison results for files. When creating, mirror copies of the result are added for the corresponding files")
-    public List<ComparisonResultResponseDto> createMany(@RequestBody List<CreateComparisonResultRequestDto> dtos) {
-        return comparisonResultService.createMany(dtos);
-    }
-
-    @PatchMapping
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "Patch many comparison results", description = "Patch many comparison results for files. When patching, mirror copies of the result are patched for the corresponding files")
-    public List<ComparisonResultResponseDto> patchMany(@RequestBody @Valid List<UpdateComparisonResultRequestDto> dtos) {
-        return comparisonResultService.patchMany(dtos);
+    @Operation(summary = "Merge many comparison results", description = "Merge many comparison results for files. If existing comparison results for files, they will be updated. When add a new result, a mirror copy of it will be created")
+    public List<ComparisonResultResponseDto> createMany(@RequestBody @Valid MergeComparisonResultRequestDto dto) {
+        return comparisonResultService.mergeMany(dto);
     }
 
     @DeleteMapping
