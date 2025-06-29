@@ -1,4 +1,4 @@
-package ru.itegor.antiplagiacode.comparison_result.dto;
+package ru.itegor.antiplagiacode.kafka.serialization.dto;
 
 import lombok.Value;
 

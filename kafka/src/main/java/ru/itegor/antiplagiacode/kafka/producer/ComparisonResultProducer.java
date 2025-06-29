@@ -1,9 +1,9 @@
-package ru.itegor.antiplagiacode.file.service;
+package ru.itegor.antiplagiacode.kafka.producer;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import ru.itegor.antiplagiacode.comparison_result.dto.ComparisonResultMessage;
+import ru.itegor.antiplagiacode.kafka.message.ComparisonResultMessage;
 
 import java.time.Instant;
 

@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import ru.itegor.antiplagiacode.comparison_result.dto.ComparisonResultMessage;
+import ru.itegor.antiplagiacode.kafka.producer.ComparisonResultProducer;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.file.FileEntity;
 import ru.itegor.antiplagiacode.file.FileMapper;
@@ -14,8 +14,8 @@ import ru.itegor.antiplagiacode.file.FileRepository;
 import ru.itegor.antiplagiacode.file.dto.FileMetadataDto;
 import ru.itegor.antiplagiacode.file.dto.FileMetadataResponseDto;
 import ru.itegor.antiplagiacode.file.dto.FileResponseDto;
-import ru.itegor.antiplagiacode.file.service.ComparisonResultProducer;
 import ru.itegor.antiplagiacode.file.service.FileService;
+import ru.itegor.antiplagiacode.kafka.message.ComparisonResultMessage;
 import ru.itegor.antiplagiacode.storage.service.S3Service;
 import ru.itegor.antiplagiacode.student.StudentRepository;
 import ru.itegor.antiplagiacode.task.TaskEntity;
@@ -107,10 +107,12 @@ public class FileServiceImpl implements FileService {
                 .collect(Collectors.toList());
         comparedFileIds.remove(originalFileId);
 
-        producer.sendComparisonResult(new ComparisonResultMessage(
-                fileEntity.getId(),
-                comparedFileIds
-        ));
+        producer.sendComparisonResult(
+                ComparisonResultMessage.builder()
+                        .originalFileId(fileEntity.getId())
+                        .comparedFileIds(comparedFileIds)
+                        .build()
+        );
     }
 
     private FileEntity findById(Long id) {
