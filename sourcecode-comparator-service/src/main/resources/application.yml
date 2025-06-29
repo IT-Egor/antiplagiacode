@@ -15,6 +15,10 @@ logging:
     org.zalando.logbook: TRACE
 
 app:
+  antiplagiacode:
+    bootstrap-server: http://localhost:8080
+    path:
+      download: /api/v1/file/download/{fileId}
   kafka:
     file-scan-topic: file-scan.v1
     group-id: file-scan
