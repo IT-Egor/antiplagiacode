@@ -56,6 +56,13 @@ public class StudentController {
         return studentService.addStudentToClass(studentId, classId);
     }
 
+    @PostMapping("/post-many")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Add students to class", description = "Add multiple students to a class")
+    public List<StudentResponseDto> addStudentsToClass(@RequestParam List<Long> studentIds, @RequestParam Long classId) {
+        return studentService.addStudentsToClass(studentIds, classId);
+    }
+
     @PatchMapping
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Change student class")

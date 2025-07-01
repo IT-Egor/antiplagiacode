@@ -17,6 +17,8 @@ public interface StudentService {
 
     StudentResponseDto addStudentToClass(Long studentId, Long classId);
 
+    List<StudentResponseDto> addStudentsToClass(List<Long> studentIds, Long classId);
+
     StudentResponseDto changeStudentClass(Long studentId, Long classId);
 
     int changeStudentsClasses(List<Long> studentIds, Long classId);

@@ -31,7 +31,7 @@
 ## Технологический стек
 - **Backend:** Java 21, Spring Boot 3.5
 - **База данных:** PostgreSQL 16
-- **Брокер сообщений:** Apache Kafka `(не реализовано)`
+- **Брокер сообщений:** Apache Kafka
 - **Хранилище файлов:** AWS S3-совместимое хранилище
 - **Аутентификация:** JWT `(не реализовано)`
 - **Контейнеризация:** Docker
@@ -45,7 +45,7 @@
     - Отправка заданий на проверку в антиплагиат
     - Прием результатов проверки
 
-2. **Сервис антиплагиата `(не реализован)`:**
+2. **Сервис антиплагиата:**
     - Скачивание файлов из хранилища
     - Анализ текстового содержимого
     - Расчет процента схожести работ
@@ -69,13 +69,31 @@ docker-compose up -d
 ```
 
 ## Пример использования
-### Загрузка файла в систему
-1. **создание пользователя**
+### Расчет процента схожести файлов
+1. **создание пользователей**
 ```bash
 curl -X POST http://localhost:8080/api/v1/user \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "new_student",
+    "username": "new_student1",
+    "password": "pass123",
+    "role": "STUDENT"
+  }'
+```
+```bash
+curl -X POST http://localhost:8080/api/v1/user \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "new_student2",
+    "password": "pass123",
+    "role": "STUDENT"
+  }'
+```
+```bash
+curl -X POST http://localhost:8080/api/v1/user \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "new_student3",
     "password": "pass123",
     "role": "STUDENT"
   }'
@@ -90,9 +108,9 @@ curl -X POST http://localhost:8080/api/v1/class \
   }'
 ```
 
-3. **привязка ученика к классу**
+3. **привязка учеников к классу**
 ```bash
-curl -X POST "http://localhost:8080/api/v1/student?studentId=1&classId=1" \
+curl -X POST "http://localhost:8080/api/v1/student/post-many?studentIds=1&studentIds=2&studentIds=3&classId=1" \
   -H "Content-Type: application/json"
 ```
 
@@ -101,12 +119,13 @@ curl -X POST "http://localhost:8080/api/v1/student?studentId=1&classId=1" \
 curl -X POST http://localhost:8080/api/v1/task \
   -H "Content-Type: application/json" \
   -d '{
-    "startDate": "2025-06-23",
-    "endDate": "2025-07-23",
+    "startDate": "yyyy-mm-dd",
+    "endDate": "yyyy-mm-dd",
     "description": "IT homework",
     "classId": 1
   }'
 ```
+Укажите дату начала и конца задания. Дата должна быть позже и равна сегодняшней
 
 5. **загрузка файла**
 ```bash
@@ -114,9 +133,25 @@ curl -X POST "http://localhost:8080/api/v1/file?studentId=1&taskId=1" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@/path/to/your/file.txt"
 ```
-Где: `/path/to/your/file.txt` — замените на реальный путь к файлу на вашем устройстве
+```bash
+curl -X POST "http://localhost:8080/api/v1/file?studentId=2&taskId=1" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@/path/to/your/file.txt"
+```
+```bash
+curl -X POST "http://localhost:8080/api/v1/file?studentId=3&taskId=1" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@/path/to/your/file.txt"
+```
+Где: `/path/to/your/file.txt` — замените на реальный путь к файлу на Вашем устройстве  
+Для получения различных результатов стоит прикрепить 3 различных файла
 
-6. **скачивание загруженного файла**
+6. **просмотр всех результатов сравнения**
+```bash
+curl "http://localhost:8080/api/v1/comparison-result?page=0&size=10&sort=id,asc"
+```
+
+7. **скачивание загруженного файла**
 ```bash
 curl "http://localhost:8080/api/v1/file/download/1"
 ```

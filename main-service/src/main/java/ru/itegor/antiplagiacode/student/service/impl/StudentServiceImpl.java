@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itegor.antiplagiacode.clazz.ClassEntity;
 import ru.itegor.antiplagiacode.clazz.ClassRepository;
-import ru.itegor.antiplagiacode.exception.exceptions.AccessLevelException;
 import ru.itegor.antiplagiacode.exception.exceptions.NotFoundException;
 import ru.itegor.antiplagiacode.student.StudentClassEntity;
 import ru.itegor.antiplagiacode.student.StudentMapper;
@@ -17,6 +16,7 @@ import ru.itegor.antiplagiacode.student.service.StudentService;
 import ru.itegor.antiplagiacode.user.UserEntity;
 import ru.itegor.antiplagiacode.user.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -54,7 +54,6 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public StudentResponseDto addStudentToClass(Long studentId, Long classId) {
         UserEntity student = findStudentById(studentId);
-        checkUserRole(student);
         ClassEntity clazz = findClassById(classId);
 
         StudentClassEntity studentClass = new StudentClassEntity();
@@ -62,6 +61,25 @@ public class StudentServiceImpl implements StudentService {
         studentClass.setClazz(clazz);
 
         return studentMapper.toStudentResponseDto(studentRepository.save(studentClass));
+    }
+
+    @Override
+    public List<StudentResponseDto> addStudentsToClass(List<Long> studentIds, Long classId) {
+        List<UserEntity> students = findStudentsByIds(studentIds);
+        ClassEntity clazz = findClassById(classId);
+
+        List<StudentClassEntity> studentClasses = new ArrayList<>();
+
+        for (UserEntity student : students) {
+            StudentClassEntity studentClass = new StudentClassEntity();
+            studentClass.setStudent(student);
+            studentClass.setClazz(clazz);
+            studentClasses.add(studentClass);
+        }
+
+        return studentRepository.saveAll(studentClasses).stream()
+                .map(studentMapper::toStudentResponseDto)
+                .toList();
     }
 
     @Override
@@ -114,18 +132,16 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private UserEntity findStudentById(Long studentId) {
-        return userRepository.findById(studentId).orElseThrow(() ->
+        return userRepository.findStudentById(studentId).orElseThrow(() ->
                 new NotFoundException("Student with id `%s` not found".formatted(studentId)));
+    }
+
+    private List<UserEntity> findStudentsByIds(List<Long> studentIds) {
+        return userRepository.findAllStudentsById(studentIds).stream().toList();
     }
 
     private ClassEntity findClassById(Long classId) {
         return classRepository.findById(classId).orElseThrow(() ->
                 new NotFoundException("Class with id `%s` not found".formatted(classId)));
-    }
-
-    private void checkUserRole(UserEntity user) {
-        if (user.getRole() != UserEntity.Role.STUDENT) {
-            throw new AccessLevelException("User with id `%s` is not a student".formatted(user.getId()));
-        }
     }
 }
