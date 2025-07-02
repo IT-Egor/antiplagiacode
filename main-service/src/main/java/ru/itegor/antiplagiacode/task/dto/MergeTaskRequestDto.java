@@ -16,6 +16,9 @@ import java.time.LocalDate;
 @Value
 @Schema(description = "Task create and update DTO")
 public class MergeTaskRequestDto {
+    @NotNull(message = "Task name is required", groups = {CreateValidation.class})
+    String name;
+
     @NotNull(message = "Task start date is required", groups = {CreateValidation.class})
     @FutureOrPresent(message = "Task start date must be future or present",
             groups = {CreateValidation.class, UpdateValidation.class})

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @Value
 public class TaskResponseDto {
     Long id;
+    String name;
     LocalDate startDate;
     LocalDate endDate;
     String description;

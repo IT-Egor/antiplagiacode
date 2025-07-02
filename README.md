@@ -119,9 +119,10 @@ curl -X POST "http://localhost:8080/api/v1/student/post-many?studentIds=1&studen
 curl -X POST http://localhost:8080/api/v1/task \
   -H "Content-Type: application/json" \
   -d '{
+    "name": "IT homework",
     "startDate": "yyyy-mm-dd",
     "endDate": "yyyy-mm-dd",
-    "description": "IT homework",
+    "description": "description",
     "classId": 1
   }'
 ```
