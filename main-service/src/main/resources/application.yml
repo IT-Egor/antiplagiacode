@@ -46,3 +46,5 @@ logbook:
 app:
   kafka:
     file-scan-topic: file-scan.v1
+  analytics:
+    warning-threshold: 50.0

@@ -2,7 +2,7 @@ package ru.itegor.antiplagiacode.comparison_result.service.impl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,12 +25,24 @@ import java.util.Optional;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class ComparisonResultServiceImpl implements ComparisonResultService {
     private final ComparisonResultMapper comparisonResultMapper;
     private final ComparisonResultRepository comparisonResultRepository;
     private final FileRepository fileRepository;
     private final EntityManager entityManager;
+    private final Double warningThreshold;
+
+    public ComparisonResultServiceImpl(ComparisonResultMapper comparisonResultMapper,
+                                       ComparisonResultRepository comparisonResultRepository,
+                                       FileRepository fileRepository,
+                                       EntityManager entityManager,
+                                       @Value("${app.analytics.warning-threshold}") Double warningThreshold) {
+        this.comparisonResultMapper = comparisonResultMapper;
+        this.comparisonResultRepository = comparisonResultRepository;
+        this.fileRepository = fileRepository;
+        this.entityManager = entityManager;
+        this.warningThreshold = warningThreshold;
+    }
 
     @Override
     public Page<ComparisonResultResponseDto> getAll(Pageable pageable) {
@@ -47,6 +59,27 @@ public class ComparisonResultServiceImpl implements ComparisonResultService {
     public List<ComparisonResultResponseDto> getAllByFileId(Long id) {
         Collection<ComparisonResultEntity> comparisonResults = comparisonResultRepository.findAllByOriginalFile_Id(id);
         return comparisonResults.stream()
+                .map(comparisonResultMapper::toComparisonResultResponseDto)
+                .toList();
+    }
+
+    @Override
+    public List<ComparisonResultResponseDto> getAllByTaskId(Long taskId) {
+        return comparisonResultRepository.findAllByOriginalFile_Task_Id(taskId).stream()
+                .map(comparisonResultMapper::toComparisonResultResponseDto)
+                .toList();
+    }
+
+    @Override
+    public List<ComparisonResultResponseDto> getWarningsByFileId(Long fileId) {
+        return comparisonResultRepository.findWarningsByOriginalFileId(fileId, warningThreshold).stream()
+                .map(comparisonResultMapper::toComparisonResultResponseDto)
+                .toList();
+    }
+
+    @Override
+    public List<ComparisonResultResponseDto> getWarningsByTaskId(Long taskId) {
+        return comparisonResultRepository.findWarningsByTaskId(taskId, warningThreshold).stream()
                 .map(comparisonResultMapper::toComparisonResultResponseDto)
                 .toList();
     }

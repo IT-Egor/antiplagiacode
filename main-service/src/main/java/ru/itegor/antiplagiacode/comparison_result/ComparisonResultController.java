@@ -45,6 +45,27 @@ public class ComparisonResultController {
         return comparisonResultService.getAllByFileId(id);
     }
 
+    @GetMapping("/by-task-id/{taskId}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get comparison results by task id")
+    public List<ComparisonResultResponseDto> getAllByTaskId(@PathVariable Long taskId) {
+        return comparisonResultService.getAllByTaskId(taskId);
+    }
+
+    @GetMapping("/warning/by-file-id/{fileId}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get suspicious comparison results by file id", description = "Get comparison results by file id with result greater than 50.00")
+    public List<ComparisonResultResponseDto> getAllWarningsByFileId(@PathVariable Long fileId) {
+        return comparisonResultService.getWarningsByFileId(fileId);
+    }
+
+    @GetMapping("warning/by-task-id/{taskId}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get suspicious comparison results by task id", description = "Get comparison results by task id with result greater than 50.00")
+    public List<ComparisonResultResponseDto> getAllWarningsByTaskId(@PathVariable Long taskId) {
+        return comparisonResultService.getWarningsByTaskId(taskId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Merge many comparison results", description = "Merge many comparison results for files. If existing comparison results for files, they will be updated. When add a new result, a mirror copy of it will be created")

@@ -14,7 +14,13 @@ public interface ComparisonResultService {
 
     List<ComparisonResultResponseDto> getAllByFileId(Long id);
 
+    List<ComparisonResultResponseDto> getAllByTaskId(Long taskId);
+
     List<ComparisonResultResponseDto> mergeMany(MergeComparisonResultRequestDto dto);
+
+    List<ComparisonResultResponseDto> getWarningsByFileId(Long fileId);
+
+    List<ComparisonResultResponseDto> getWarningsByTaskId(Long taskId);
 
     void deleteManyByOriginalFileId(Long id);
 
